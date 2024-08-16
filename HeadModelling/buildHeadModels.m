@@ -1,8 +1,22 @@
-fs_folder = '/home/erfan/Thesis/FS_output/';
+[ret, name] = system('hostname');
 
-BrainstormDbDir = '/home/erfan/Thesis/brainstorm_db/';
+if startsWith(name,'ra')
 
-AD_dir = '/home/erfan/Thesis/ADanonShare/';
+    addpath '/data/erfan/brainstorm3'
+
+    fs_folder = '/home/erfan/output/';
+    
+    BrainstormDbDir = '/data/erfan/brainstorm_db/';
+    
+    AD_dir = '/home/erfan/AD_UCSF/';
+else 
+
+    fs_folder = '/home/erfan/Thesis/FS_output/AD/';
+    
+    BrainstormDbDir = '/home/erfan/Thesis/brainstorm_db/';
+    
+    AD_dir = '/home/erfan/Thesis/ADanonShare/';
+end 
 
 fig_folder = [AD_dir '/Results/Figures/'];
 
@@ -16,9 +30,6 @@ thick = 4;
 
 asegVertices=500;
 
-subCortexKeeps_All   = {'Accumbens L','Accumbens R','Amygdala L', 'Amygdala R', ...
-        'Brainstem','Caudate L','Caudate R','Cerebellum L','Cerebellum R', 'Pallidum L',...
-        'Pallidum R','Hippocampus L', 'Hippocampus R','Putamen L','Putamen R', 'Thalamus L', 'Thalamus R'};
 
 brainstorm 
 
@@ -39,6 +50,15 @@ sbjs=dir([data_folder '*_meg_rest_60sec.mat']);
 for isbj =2:length(sbjs)
 sbj = sbjs(isbj).name;
 
+subCortexKeeps_All   = {'Accumbens L','Accumbens R','Amygdala L', 'Amygdala R', ...
+        'Brainstem','Caudate L','Caudate R','Cerebellum L','Cerebellum R', 'Pallidum L',...
+        'Pallidum R','Hippocampus L', 'Hippocampus R','Putamen L','Putamen R', 'Thalamus L', 'Thalamus R'};
+%add some structure execlusion for some subjects 
+if contains(sbj,'0066')
+subCortexKeeps_All  = {'Accumbens L','Accumbens R','Amygdala L', 'Amygdala R', ...
+        'Brainstem','Caudate L','Caudate R','Cerebellum L','Cerebellum R',...
+        'Hippocampus L', 'Hippocampus R','Putamen L','Putamen R', 'Thalamus L', 'Thalamus R'};
+end 
 
 data_file = [data_folder sbjs(isbj).name];
 
@@ -55,7 +75,7 @@ bst_report('Start', sFiles);
 % Process: Import anatomy folder
 sFiles = bst_process('CallProcess', 'process_import_anatomy', sFiles, [], ...
   'subjectname', sbj, ...
-  'mrifile',     {[fs_folder 'AD/' sbj], 'FreeSurfer'}, ...
+  'mrifile',     {[fs_folder sbj], 'FreeSurfer'}, ...
   'nvertices',   5000, ...
   'nas',         [0, 0, 0], ...
   'lpa',         [0, 0, 0], ...
