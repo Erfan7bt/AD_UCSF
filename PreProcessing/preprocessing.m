@@ -1,14 +1,11 @@
-clc
-clear all
-addpath ../fieldtrip-20230118/
-ft_defaults
 
+addpath ../fieldtrip-20240704/
+ft_defaults
 
 report_dir = './Results/';
 preprocessed_dir = report_dir;
 save_prep = preprocessed_dir;
 subj='RSID0071';
-
 %% Read and plot raw data 
 cfg=[];
 data_file= 'RSID0071_meg_rest_60sec.mat';
