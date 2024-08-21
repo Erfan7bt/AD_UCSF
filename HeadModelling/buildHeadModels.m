@@ -216,6 +216,14 @@ for iScout = 1 : length(sScouts)
     panel_scout('SetOrientationConstraint', iScout, '');
 end
 bst_memory('UnloadAll', 'Forced');
+ %%
+ db_reload_database()
+sbj_db = bst_get('Subject', isbj_db);
+ for isurf = 1:length(sbj_db.Surface)
+    if strfind(sbj_db.Surface(isurf).FileName, 'tess_concat.mat')
+      db_surface_default(isbj_db, 'Cortex', isurf);      
+    end
+  end
 %% create new BEM shells
 sFiles = [];
 
@@ -272,14 +280,6 @@ sFiles = bst_process('CallProcess', 'process_generate_bem', sFiles, [], ...
  [hFig, iDS, iFig] = view_mri(MriFile, SurfaceFile4)
  out_figure_image(hFig, [fig_folder sbj '/mri_with_head.tif']);
  bst_memory('UnloadAll', 'Forced')
- %%
- db_reload_database()
-sbj_db = bst_get('Subject', isbj_db);
- for isurf = 1:length(sbj_db.Surface)
-    if strfind(sbj_db.Surface(isurf).FileName, 'tess_concat.mat')
-      db_surface_default(isbj_db, 'Cortex', isurf);      
-    end
-  end
   
 %% Force in the vertices out of inner skull if needed
 db_reload_database()

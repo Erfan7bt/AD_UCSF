@@ -13,19 +13,30 @@ settings.cma = cm17a;
 settings.nPCA = 3; 
 
 %% loop over subjects
-nsub = 1
+AD_dir='/home/erfan/Thesis/ADanonShare/';
+preprocessed_data_dir= [AD_dir 'Data/Preprocessed/'];
+subjects= dir([preprocessed_data_dir '/*.mat']);
+bs_results_dir=[AD_dir 'Results/headmodeling/'];
+source_recon_dir=[AD_dir 'Results/source/'];
+if ~isfolder(source_recon_dir)
+mkdir(source_recon_dir)
+end
+i=1%:length(subjects)
 % load MEG data
 tic
-subj = 'sub-CC110037';
+subj = subjects(i).name;
+subj = strrep(subj, '.mat', '');
+
 disp(['processing subject ' subj])
-load([subj '.mat']);
+load([ preprocessed_data_dir subj '.mat']);
 nchan = size(dat.label,1);
 ntri = size(dat.trial,2); 
 nsam = size(dat.trial{1,1},2);
+
 % load Brainstorm files
 
 try
-    load(['./bs_results.mat']);
+    load([ bs_results_dir subj '/bs_results.mat']);
     disp('loading data')
 catch
     % skip if no data
@@ -34,28 +45,50 @@ end
 % put the data in the right format (nchan x nsam x ntri):
 data = cat(3,dat.trial{1,:});
 % upscale for numerical stability
-    data = data.*10^10;
-    leadfield = leadfield.*10^10;
-    leadfield = leadfield(1:nchan, :, :);
+data = data.*10^10;
+leadfield = leadfield.*10^10;
+leadfield = leadfield(1:nchan, :, :);
 % change the leadfield to remove radial dimension for MEG using the function from Franziska
 leadfield = fp_get_lf(leadfield);
 % frequencies with 0.5 Hz resolution
 frqs = linspace(0, settings.target_fs/2, nsam/2+1)';
 % number of bootstrap samples
 nbootstrap = 0;
-% number of ROIs in the Desikan-Kiliany Atlas
-nROI = length(cortex.Atlas(3).Scouts);
+% number of ROIs in the Desikan-Kiliany Atlas and subcortical 
+nROI_cortex = length(Mixed_cortex_lowres.Atlas(5).Scouts);
+nROI_subcortex = length(Mixed_cortex_lowres.Atlas(9).Scouts)-2;
+% nROI = nROI_subcoretex+nROI_cortex;
 % ROI labels
-labels = {cortex.Atlas(3).Scouts.Label};
+labels_cortex= {Mixed_cortex_lowres.Atlas(5).Scouts.Label};
+Labels_subcortex= {Mixed_cortex_lowres.Atlas(9).Scouts.Label};
+
 ind_cortex = [];
 ind_roi = {};
-for iROI = 1:nROI
-  ind_roi{iROI} = cortex.Atlas(3).Scouts(iROI).Vertices;
-  ind_cortex = cat(1, ind_cortex, ind_roi{iROI});
+for iROI = 1:nROI_cortex
+  ind_roi{iROI} = Mixed_cortex_lowres.Atlas(5).Scouts(iROI).Vertices;
+  ind_cortex = cat(2, ind_cortex, ind_roi{iROI});
   [~, ind_roi_cortex{iROI}, ~] = intersect(ind_cortex, ind_roi{iROI});
 end
-nvox = length(ind_cortex);
-leadfield = leadfield(:, ind_cortex, :);
+
+ind_subcortex = [];
+ind_roi_sub= {};
+for iROI = 1:nROI_subcortex+2
+    if strfind(Mixed_cortex_lowres.Atlas(9).Scouts(iROI).Label,'Cortex')
+        continue
+    end
+  ind_roi_sub{iROI} = Mixed_cortex_lowres.Atlas(9).Scouts(iROI).Vertices;
+  ind_subcortex = cat(2, ind_subcortex, ind_roi_sub{iROI});
+  [~, ind_roi_subcortex{iROI}, ~] = intersect(ind_subcortex, ind_roi_sub{iROI});
+end
+
+ind_roi_all=cat(2,ind_roi_subcortex,ind_roi_cortex);
+
+ind=cat(2,ind_subcortex,ind_cortex);
+nROI = nROI_subcortex + nROI_cortex ;
+
+nvox = length(ind);
+leadfield = leadfield(:, ind, :);
+
 %%
 % get cross-spectrumtt
 disp('computing cross-spectrum')
@@ -83,12 +116,12 @@ varex = ones(nROI, size(dat.label,1));
 nPCAs = [];
 %%
 for iROI = 1:nROI
-  data_ = source_voxel_data(:, ind_roi_cortex{iROI}, :);
+  data_ = source_voxel_data(:, ind_roi_all{iROI}, :);
   va_ = var(data_(:, :));
   source_roi_power(iROI) = sum(va_)';
-  source_roi_power_norm(iROI) = source_roi_power(iROI)/length(ind_roi_cortex{iROI});
+  source_roi_power_norm(iROI) = source_roi_power(iROI)/length(ind_roi_all{iROI});
   % updated computation
-  P_ = P(:, ind_roi_cortex{iROI}, :);
+  P_ = P(:, ind_roi_all{iROI}, :);
   P_ = P_(:, :);
   CS_ROI = [];
   for ifreq = 1:size(CS_sensor, 1)
@@ -96,7 +129,7 @@ for iROI = 1:nROI
   end
   source_power_all{iROI} = abs(cs2psd(CS_ROI));
   source_roi_power_total(:, iROI) = sum(abs(cs2psd(CS_ROI)), 2); 
-  source_roi_power_total_norm(:, iROI) = source_roi_power_total(:, iROI)/length(ind_roi_cortex{iROI}); 
+  source_roi_power_total_norm(:, iROI) = source_roi_power_total(:, iROI)/length(ind_roi_all{iROI}); 
   % optional z-scoring - removed
   % data_(:, :) = zscore(data_(:, :))*sqrt(mean(va_));
   % PCA/SVD
@@ -141,11 +174,14 @@ if settings.nPCA < 1
 end
 
 % result folder
-result_folder_sub = ['./' subj];
+result_folder_sub = [source_recon_dir subj '/'];
+if ~isfolder(result_folder_sub)
+    mkdir(result_folder_sub)
+end
 
 % save results 
 disp('saving results')
-save([result_folder_sub '/source_rec_results.mat'], 'source_roi_power', 'source_roi_power_norm', ...
+save([result_folder_sub 'source_rec_results.mat'], 'source_roi_power', 'source_roi_power_norm', ...
     'source_roi_power_total','source_roi_power_total_norm','source_power_all', 'conn', 'settings','source_roi_data','inds','varex', ...
-     'ind_cortex', 'nchan', 'nPCAs', 'beg_inds', 'end_inds', 'PCA_inds','nbootstrap');
+     'ind', 'nchan', 'nPCAs', 'beg_inds', 'end_inds', 'PCA_inds','nbootstrap');
 toc
