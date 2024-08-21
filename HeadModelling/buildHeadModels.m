@@ -4,14 +4,14 @@ if startsWith(name,'ra')
 
     addpath '/data/erfan/brainstorm3'
 
-    fs_folder = '/home/erfan/output/';
+    fs_folder = '/data/erfan/freesurfer/subjects/';
     
     BrainstormDbDir = '/data/erfan/brainstorm_db/';
     
     AD_dir = '/home/erfan/AD_UCSF/';
 else 
 
-    fs_folder = '/home/erfan/Thesis/FS_output/AD/';
+    fs_folder = '/home/erfan/Thesis/freesurfer/subjects/';
     
     BrainstormDbDir = '/home/erfan/Thesis/brainstorm_db/';
     
@@ -22,14 +22,14 @@ fig_folder = [AD_dir '/Results/Figures/'];
 
 results_folder = [AD_dir 'Results/headmodeling/']; mkdir(results_folder)
 
-protocol_name = 'AD';
+protocol_name = 'AD_freesurfer';
 
 data_folder = [AD_dir 'Data/Corrected/'];
 
 thick = 4;
 
-asegVertices=500;
-
+asegVertices_1=500;
+asegVertices_2=1250;
 
 brainstorm 
 
@@ -47,18 +47,18 @@ end
 
 sbjs=dir([data_folder '*_meg_rest_60sec.mat']);
 
-for isbj =2:length(sbjs)
+for isbj = 2:length(sbjs)
 sbj = sbjs(isbj).name;
 
-subCortexKeeps_All   = {'Accumbens L','Accumbens R','Amygdala L', 'Amygdala R', ...
-        'Brainstem','Caudate L','Caudate R','Cerebellum L','Cerebellum R', 'Pallidum L',...
-        'Pallidum R','Hippocampus L', 'Hippocampus R','Putamen L','Putamen R', 'Thalamus L', 'Thalamus R'};
+% subCortexKeeps_All   = {'Accumbens L','Accumbens R','Amygdala L', 'Amygdala R', ...
+%         'Brainstem','Caudate L','Caudate R','Cerebellum L','Cerebellum R', 'Pallidum L',...
+%         'Pallidum R','Hippocampus L', 'Hippocampus R','Putamen L','Putamen R', 'Thalamus L', 'Thalamus R'};
 %add some structure execlusion for some subjects 
-if contains(sbj,'0066')
+% if contains(sbj,'0066')
 subCortexKeeps_All  = {'Accumbens L','Accumbens R','Amygdala L', 'Amygdala R', ...
         'Brainstem','Caudate L','Caudate R','Cerebellum L','Cerebellum R',...
         'Hippocampus L', 'Hippocampus R','Putamen L','Putamen R', 'Thalamus L', 'Thalamus R'};
-end 
+% end 
 
 data_file = [data_folder sbjs(isbj).name];
 
@@ -68,9 +68,6 @@ mkdir([fig_folder sbj])
 
 % Input files
 sFiles = [];
-
-% Start a new report
-bst_report('Start', sFiles);
 
 % Process: Import anatomy folder
 sFiles = bst_process('CallProcess', 'process_import_anatomy', sFiles, [], ...
@@ -141,10 +138,19 @@ sbj_db = bst_get('Subject', isbj_db);
 % 
 % bst_memory('UnloadAll', 'Forced') % Close all the existing figures.
 
- %% Less Vertices for the subcortical aseg Atlas
+ %% subcortical aseg Atlas      
+   newAsegFile_high=[sbj  '/tess_aseg.mat']
+
+
 for isurf = 1:length(sbj_db.Surface)
 if strfind(sbj_db.Surface(isurf).FileName, 'tess_aseg.mat')     
-  [newAsegFile, iSurface, I, J] = tess_downsize(file_fullpath(sbj_db.Surface(isurf).FileName), asegVertices, 'reducepatch');
+  [newAsegFile2, iSurface2, I, J] = tess_downsize(file_fullpath(sbj_db.Surface(isurf).FileName), asegVertices_2, 'reducepatch');
+end
+end
+
+ for isurf = 1:length(sbj_db.Surface)
+if strfind(sbj_db.Surface(isurf).FileName, 'tess_aseg.mat')     
+  [newAsegFile, iSurface, I, J] = tess_downsize(file_fullpath(sbj_db.Surface(isurf).FileName), asegVertices_1, 'reducepatch');
 end
 end
 %%
@@ -159,9 +165,27 @@ newAsegFile = panel_scout('NewSurface', 1);
     if strfind(sbj_db.Surface(isurf).FileName, 'tess_cortex_mid_low_2000V.mat')
        defaultCortex=sbj_db.Surface(isurf).FileName;    
     end
-  end
+ end
+
+for isurf = 1:length(sbj_db.Surface)
+    if strfind(sbj_db.Surface(isurf).FileName, 'tess_cortex_mid_high.mat')
+       defaultCortex_high=sbj_db.Surface(isurf).FileName;    
+    end
+end
+
+for isurf = 1:length(sbj_db.Surface)
+if strfind(sbj_db.Surface(isurf).FileName, 'tess_cortex_mid_low.mat')
+   defaultCortex2=sbj_db.Surface(isurf).FileName;    
+end
+end
+
 TessFiles={newAsegFile, defaultCortex};
-[mixedFile,iSurface]=tess_concatenate(TessFiles,'Cortex_mix','Cortex');
+TessFiles2={newAsegFile2, defaultCortex2};
+TessFiles_high={newAsegFile_high, defaultCortex_high};
+
+[mixedFile,iSurface]=tess_concatenate(TessFiles,'Cortex_mix_2000_500','Cortex');
+[mixedFile2,iSurface]=tess_concatenate(TessFiles2,'Cortex_mix_5000_1250','Cortex');
+[mixedFile_high,iSurface]=tess_concatenate(TessFiles_high,'Cortex_mix_high','Cortex');
 %%
 % Atlas with structures
 atlasName = 'Structures';
@@ -248,7 +272,15 @@ sFiles = bst_process('CallProcess', 'process_generate_bem', sFiles, [], ...
  [hFig, iDS, iFig] = view_mri(MriFile, SurfaceFile4)
  out_figure_image(hFig, [fig_folder sbj '/mri_with_head.tif']);
  bst_memory('UnloadAll', 'Forced')
- 
+ %%
+ db_reload_database()
+sbj_db = bst_get('Subject', isbj_db);
+ for isurf = 1:length(sbj_db.Surface)
+    if strfind(sbj_db.Surface(isurf).FileName, 'tess_concat.mat')
+      db_surface_default(isbj_db, 'Cortex', isurf);      
+    end
+  end
+  
 %% Force in the vertices out of inner skull if needed
 db_reload_database()
 sbj_db = bst_get('Subject', isbj_db);
@@ -335,7 +367,6 @@ sFiles = bst_process('CallProcess', 'process_headmodel', sFiles, [], ...
          'isAdjoint',    0, ...
          'isAdaptative', 1, ...
          'isSplit',      0, ...
-         'SplitLength',  []), ...
-    'channelfile', '');
+         'SplitLength',  []));
 end
   
