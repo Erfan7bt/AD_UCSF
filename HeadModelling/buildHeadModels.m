@@ -47,7 +47,7 @@ end
 
 sbjs=dir([data_folder '*_meg_rest_60sec.mat']);
 
-for isbj = 2:length(sbjs)
+for isbj = length(sbjs)
 sbj = sbjs(isbj).name;
 
 % subCortexKeeps_All   = {'Accumbens L','Accumbens R','Amygdala L', 'Amygdala R', ...
