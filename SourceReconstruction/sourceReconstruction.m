@@ -1,5 +1,5 @@
-
-settings.target_fs = 100; %sampling frequency
+for i=1:4
+settings.target_fs = 200; %sampling frequency
 settings.lcmv_reg = 0.05;
 settings.fres = settings.target_fs;
 settings.smoothcortex = 0.3; %less smoothing
@@ -21,7 +21,7 @@ source_recon_dir=[AD_dir 'Results/source/'];
 if ~isfolder(source_recon_dir)
 mkdir(source_recon_dir)
 end
-i=1%:length(subjects)
+
 % load MEG data
 tic
 subj = subjects(i).name;
@@ -57,7 +57,7 @@ nbootstrap = 0;
 % number of ROIs in the Desikan-Kiliany Atlas and subcortical 
 nROI_cortex = length(Mixed_cortex_lowres.Atlas(5).Scouts);
 nROI_subcortex = length(Mixed_cortex_lowres.Atlas(9).Scouts)-2;
-% nROI = nROI_subcoretex+nROI_cortex;
+nROI = nROI_subcortex+nROI_cortex;
 % ROI labels
 labels_cortex= {Mixed_cortex_lowres.Atlas(5).Scouts.Label};
 Labels_subcortex= {Mixed_cortex_lowres.Atlas(9).Scouts.Label};
@@ -72,14 +72,15 @@ end
 
 ind_subcortex = [];
 ind_roi_sub= {};
-for iROI = 1:nROI_subcortex+2
+for iROI = 1:nROI_subcortex
     if strfind(Mixed_cortex_lowres.Atlas(9).Scouts(iROI).Label,'Cortex')
-        continue
+          Mixed_cortex_lowres.Atlas(9).Scouts(iROI)=[];
     end
-  ind_roi_sub{iROI} = Mixed_cortex_lowres.Atlas(9).Scouts(iROI).Vertices;
-  ind_subcortex = cat(2, ind_subcortex, ind_roi_sub{iROI});
-  [~, ind_roi_subcortex{iROI}, ~] = intersect(ind_subcortex, ind_roi_sub{iROI});
+      ind_roi_sub{iROI} = Mixed_cortex_lowres.Atlas(9).Scouts(iROI).Vertices;
+      ind_subcortex = cat(2, ind_subcortex, ind_roi_sub{iROI});
+      [~, ind_roi_subcortex{iROI}, ~] = intersect(ind_subcortex, ind_roi_sub{iROI});
 end
+
 
 ind_roi_all=cat(2,ind_roi_subcortex,ind_roi_cortex);
 
@@ -90,7 +91,7 @@ nvox = length(ind);
 leadfield = leadfield(:, ind, :);
 
 %%
-% get cross-spectrumtt
+% get cross-spectrum
 disp('computing cross-spectrum')
 conn = data2spwctrgc(data, settings.fres, settings.morder, 0, nbootstrap, [], {'CS'});
 CS_sensor = conn.CS; 
@@ -184,4 +185,6 @@ disp('saving results')
 save([result_folder_sub 'source_rec_results.mat'], 'source_roi_power', 'source_roi_power_norm', ...
     'source_roi_power_total','source_roi_power_total_norm','source_power_all', 'conn', 'settings','source_roi_data','inds','varex', ...
      'ind', 'nchan', 'nPCAs', 'beg_inds', 'end_inds', 'PCA_inds','nbootstrap');
+clear         all
 toc
+end
