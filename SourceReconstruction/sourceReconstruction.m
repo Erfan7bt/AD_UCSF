@@ -1,6 +1,6 @@
 
 for i = 4
-settings.target_fs = 200; %sampling frequency
+settings.target_fs = 100; %sampling frequency
 settings.lcmv_reg = 0.05;
 settings.fres = settings.target_fs;
 settings.smoothcortex = 0.3; %less smoothing
@@ -25,10 +25,11 @@ preprocessed_data_dir= [AD_dir 'Data/Preprocessed/'];
 subjects= dir([preprocessed_data_dir '/*.mat']);
 bs_results_dir=[AD_dir 'Results/headmodeling/'];
 source_recon_dir=[AD_dir 'Results/source/'];
+power_figs_dir =[AD_dir 'Results/Figures/'];
+
 if ~isfolder(source_recon_dir)
 mkdir(source_recon_dir)
 end
-
 
 % load MEG data
 tic
@@ -50,6 +51,8 @@ catch
     % skip if no data
     disp('no Brainstorm data found')
 end
+figs_dir =  [power_figs_dir subj '/Power/'];
+
 % put the data in the right format (nchan x nsam x ntri):
 data = cat(3,dat.trial{1,:});
 % upscale for numerical stability
@@ -197,4 +200,3 @@ save([result_folder_sub 'source_rec_results.mat'], 'source_roi_power', 'source_r
 % clear all
 toc
 end
-

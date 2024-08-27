@@ -8,9 +8,9 @@ AD_dir = '/home/erfan/Thesis/ADanonShare/';
 data_folder = [AD_dir 'Data/Original/'];
 subjs=dir([data_folder '*sec.mat']);
 preprocessed_dir = [AD_dir 'Data/Preprocessed/']; mkdir(preprocessed_dir)
-
+resamplefs = 200;
 %% Read and plot raw data 
-for i=length(subjs)
+for i=1:length(subjs)
 
 
 data_file = [subjs(i).folder '/' subjs(i).name];
@@ -36,7 +36,7 @@ layout=ft_prepare_layout(cfg);
 plot_data(report_dir, raw_data, layout, channel_names, ['raw_after_import_' names]);
 
 cfg = [];
-cfg.resamplefs = 200;
+cfg.resamplefs = resamplefs;
 cfg.method = 'downsample';
 data_resampled=ft_resampledata(cfg,raw_data);
 
