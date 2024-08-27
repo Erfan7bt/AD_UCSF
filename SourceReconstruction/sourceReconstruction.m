@@ -1,4 +1,5 @@
-for i=1:4
+
+for i = 4
 settings.target_fs = 200; %sampling frequency
 settings.lcmv_reg = 0.05;
 settings.fres = settings.target_fs;
@@ -12,8 +13,14 @@ settings.cma = cm17a;
 % how many PCA components to keep for each ROI
 settings.nPCA = 3; 
 
-%% loop over subjects
+[ret, name] = system('hostname');
+
+if startsWith(name,'ra')
+AD_dir='/home/erfan/AD_UCSF/';
+else 
 AD_dir='/home/erfan/Thesis/ADanonShare/';
+end
+%% loop over subjects
 preprocessed_data_dir= [AD_dir 'Data/Preprocessed/'];
 subjects= dir([preprocessed_data_dir '/*.mat']);
 bs_results_dir=[AD_dir 'Results/headmodeling/'];
@@ -21,6 +28,7 @@ source_recon_dir=[AD_dir 'Results/source/'];
 if ~isfolder(source_recon_dir)
 mkdir(source_recon_dir)
 end
+
 
 % load MEG data
 tic
@@ -185,6 +193,8 @@ disp('saving results')
 save([result_folder_sub 'source_rec_results.mat'], 'source_roi_power', 'source_roi_power_norm', ...
     'source_roi_power_total','source_roi_power_total_norm','source_power_all', 'conn', 'settings','source_roi_data','inds','varex', ...
      'ind', 'nchan', 'nPCAs', 'beg_inds', 'end_inds', 'PCA_inds','nbootstrap');
-clear         all
+
+clear all
 toc
 end
+
