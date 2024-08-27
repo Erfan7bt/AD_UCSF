@@ -1,5 +1,5 @@
 
-for i = 4
+for i =1:4
 settings.target_fs = 100; %sampling frequency
 settings.lcmv_reg = 0.05;
 settings.fres = settings.target_fs;

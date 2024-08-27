@@ -1,8 +1,14 @@
+[ret, name] = system('hostname');
 
+if startsWith(name,'ra')
+AD_dir='/home/erfan/AD_UCSF/';
+addpath /data/erfan/fieldtrip-20240110/
+else 
+AD_dir='/home/erfan/Thesis/ADanonShare/';
 addpath /home/erfan/Thesis/fieldtrip-20240704/
 ft_defaults
+end
 
-AD_dir = '/home/erfan/Thesis/ADanonShare/';
 
 
 data_folder = [AD_dir 'Data/Original/'];
