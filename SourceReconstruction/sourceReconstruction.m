@@ -194,7 +194,7 @@ save([result_folder_sub 'source_rec_results.mat'], 'source_roi_power', 'source_r
     'source_roi_power_total','source_roi_power_total_norm','source_power_all', 'conn', 'settings','source_roi_data','inds','varex', ...
      'ind', 'nchan', 'nPCAs', 'beg_inds', 'end_inds', 'PCA_inds','nbootstrap');
 
-clear all
+% clear all
 toc
 end
 

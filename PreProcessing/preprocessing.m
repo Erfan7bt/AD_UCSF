@@ -10,7 +10,7 @@ subjs=dir([data_folder '*sec.mat']);
 preprocessed_dir = [AD_dir 'Data/Preprocessed/']; mkdir(preprocessed_dir)
 
 %% Read and plot raw data 
-for i=1:length(subjs)
+for i=length(subjs)
 
 
 data_file = [subjs(i).folder '/' subjs(i).name];
@@ -79,9 +79,7 @@ cfg.channel = 'meg';
 data_seg = ft_selectdata(cfg,data_seg);
 
 %% plot again for report
-for c= 1:1
     plot_data(report_dir, data_seg, layout, channel_names, ['after_rej_' names]);
-end
 %% save
 
 disp(['This data is saved in ' [preprocessed_dir sbj] ' under the name ' sbj]);

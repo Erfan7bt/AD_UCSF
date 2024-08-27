@@ -10,14 +10,16 @@ if any(outliers)
     cfg.method = 'triangulation';
     neighbours = ft_prepare_neighbours(cfg, data);
     cfg = [];
-    cfg.method = 'weighted';
+    cfg.method = 'average';
     % FT bug - badchannel needs to have a name since it's compared to
     % data.label and not just an index
     badchan_cell = data.label(bad_channels);
     cfg.badchannel = badchan_cell;
     cfg.neighbours = neighbours;
     [data_clean] = ft_channelrepair(cfg, data);
-    % get cleaned data for particular channel type
+    % get cleaned data for particular channel type bad channels lie
+% next to each other. In that case the bad channels will be removed from the
+% neighbours and not considered for interpolation.
     data_out = data_clean.trial{1,1}(channels,:);
 else
     data_clean = data;
