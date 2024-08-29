@@ -200,3 +200,13 @@ save([result_folder_sub 'source_rec_results.mat'], 'source_roi_power', 'source_r
 % clear all
 toc
 end
+onlyC=source_roi_power_norm(1:68);
+
+figs_dir =  [power_figs_dir subj '/'];
+if ~isfolder(figs_dir)
+    mkdir(figs_dir)
+end
+figure('visible','off');
+allplots_cortex_BS(Mixed_cortex_lowres, onlyC, [0 max(onlyC)], ...
+     settings.cma, 'power', settings.smoothcortex, figs_dir)
+close all
