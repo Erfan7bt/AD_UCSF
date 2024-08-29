@@ -1,6 +1,6 @@
 
 for i =1:4
-settings.target_fs = 100; %sampling frequency
+settings.target_fs = 200; %sampling frequency
 settings.lcmv_reg = 0.05;
 settings.fres = settings.target_fs;
 settings.smoothcortex = 0.3; %less smoothing
