@@ -1,4 +1,4 @@
-[ret, name] = system('hostname');
+git [ret, name] = system('hostname');
 
 if startsWith(name,'ra')
 AD_dir='/home/erfan/AD_UCSF/';
@@ -14,7 +14,7 @@ end
 data_folder = [AD_dir 'Data/Original/'];
 subjs=dir([data_folder '*sec.mat']);
 preprocessed_dir = [AD_dir 'Data/Preprocessed/']; mkdir(preprocessed_dir)
-resamplefs = 200;
+resamplefs = 100;
 %% Read and plot raw data 
 for i=1:length(subjs)
 

@@ -47,7 +47,7 @@ end
 
 sbjs=dir([data_folder '*_meg_rest_60sec.mat']);
 
-for isbj = length(sbjs)
+for isbj = 1:length(sbjs)
 sbj = sbjs(isbj).name;
 
 % subCortexKeeps_All   = {'Accumbens L','Accumbens R','Amygdala L', 'Amygdala R', ...
@@ -139,7 +139,7 @@ sbj_db = bst_get('Subject', isbj_db);
 % bst_memory('UnloadAll', 'Forced') % Close all the existing figures.
 
  %% subcortical aseg Atlas      
-   newAsegFile_high=[sbj  '/tess_aseg.mat']
+   newAsegFile_high=[sbj  '/tess_aseg.mat'];
 
 
 for isurf = 1:length(sbj_db.Surface)
@@ -195,7 +195,7 @@ hFigMix = view_surface(mixedFile);
 iAtlas = find(strcmpi(atlasName, {sSurf.Atlas.Name}));
 panel_scout('SetCurrentAtlas', iAtlas, 1);
 panel_surface('SelectHemispheres', 'struct');
-out_figure_image(hFigMix, [fig_folder sbj '/Mixed_cortex.tif'])
+% out_figure_image(hFigMix, [fig_folder sbj '/Mixed_cortex.tif'])
 pause(1);
 % Unload everything
 bst_memory('UnloadAll', 'Forced');
