@@ -7,7 +7,7 @@ subDirs = subDirs([subDirs.isdir]); % Only keep directories
 subDirs = subDirs(~ismember({subDirs.name}, {'.', '..'})); % Exclude '.' and '..'
 
 % Initialize a PDF
-pdfFileName = 'output.pdf';
+pdfFileName = 'output_headmodeling.pdf';
 append = false; % Set to false initially to create a new PDF
 
 for i = 1:length(subDirs)
@@ -32,10 +32,14 @@ for i = 1:length(subDirs)
         
         % Add a text title at the top with the subdirectory name
         annotation('textbox', [0, 0.95, 1, 0.05], 'String', subDirName, ...
-                   'FontSize', 14, 'HorizontalAlignment', 'center', 'EdgeColor', 'none');
+                   'FontSize', 10, 'HorizontalAlignment', 'center', 'EdgeColor', 'none');
         
         % Create a tiled layout to place images in a grid
-        t = tiledlayout('flow', 'TileSpacing', 'compact', 'Padding', 'compact');
+        % Adjust the 'Padding' property to add space between the title and figures
+        t = tiledlayout('flow', 'TileSpacing', 'compact', 'Padding', 'loose'); % 'loose' adds space around the grid
+        
+        % Adjust the position of the layout to add more space
+        t.Position(2) = t.Position(2) - 0.05; % Move the tiled layout down by increasing its y-position
         
         % Loop over the grouped files to display them on the same page
         for k = 1:length(groupFiles)
