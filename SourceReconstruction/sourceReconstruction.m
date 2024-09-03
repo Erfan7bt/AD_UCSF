@@ -1,5 +1,5 @@
 
-for i =1:4
+for i =1
 settings.target_fs = 200; %sampling frequency
 settings.lcmv_reg = 0.05;
 settings.fres = settings.target_fs;
@@ -11,7 +11,7 @@ settings.morder = 20;
 load cm17
 settings.cma = cm17a;
 % how many PCA components to keep for each ROI
-settings.nPCA = 3; 
+settings.nPCA = 1; 
 
 [ret, name] = system('hostname');
 
@@ -65,31 +65,34 @@ leadfield = fp_get_lf(leadfield);
 frqs = linspace(0, settings.target_fs/2, nsam/2+1)';
 % number of bootstrap samples
 nbootstrap = 0;
-% number of ROIs in the Desikan-Kiliany Atlas and subcortical 
-nROI_cortex = length(Mixed_cortex_lowres.Atlas(5).Scouts);
-nROI_subcortex = length(Mixed_cortex_lowres.Atlas(9).Scouts)-2;
-nROI = nROI_subcortex+nROI_cortex;
 % ROI labels
-labels_cortex= {Mixed_cortex_lowres.Atlas(5).Scouts.Label};
-Labels_subcortex= {Mixed_cortex_lowres.Atlas(9).Scouts.Label};
+labels_cortex= {Mixed_cortex_lowres.Atlas(4).Scouts.Label};
+Labels_subcortex= {Mixed_cortex_lowres.Atlas(8).Scouts.Label};
+%remove the cortex 
+removeIdx = strcmp(Labels_subcortex, 'Cortex R') | strcmp(Labels_subcortex, 'Cortex L');
+Mixed_cortex_lowres.Atlas(8).Scouts(removeIdx) = [];
+
+Labels_subcortex= {Mixed_cortex_lowres.Atlas(8).Scouts.Label};
+% number of ROIs in the Desikan-Kiliany Atlas and subcortical 
+nROI_cortex = length(Mixed_cortex_lowres.Atlas(4).Scouts);
+nROI_subcortex = length(Mixed_cortex_lowres.Atlas(8).Scouts);
+nROI = nROI_subcortex+nROI_cortex;
+
+ind_subcortex = [];
+ind_roi_sub= {};
+
+for iROI = 1:nROI_subcortex
+      ind_roi_sub{iROI} = Mixed_cortex_lowres.Atlas(8).Scouts(iROI).Vertices;
+      ind_subcortex = cat(2, ind_subcortex, ind_roi_sub{iROI});
+      [~, ind_roi_subcortex{iROI}, ~] = intersect(ind_subcortex, ind_roi_sub{iROI});
+end
 
 ind_cortex = [];
 ind_roi = {};
 for iROI = 1:nROI_cortex
-  ind_roi{iROI} = Mixed_cortex_lowres.Atlas(5).Scouts(iROI).Vertices;
+  ind_roi{iROI} = Mixed_cortex_lowres.Atlas(4).Scouts(iROI).Vertices;
   ind_cortex = cat(2, ind_cortex, ind_roi{iROI});
   [~, ind_roi_cortex{iROI}, ~] = intersect(ind_cortex, ind_roi{iROI});
-end
-
-ind_subcortex = [];
-ind_roi_sub= {};
-for iROI = 1:nROI_subcortex
-    if strfind(Mixed_cortex_lowres.Atlas(9).Scouts(iROI).Label,'Cortex')
-          Mixed_cortex_lowres.Atlas(9).Scouts(iROI)=[];
-    end
-      ind_roi_sub{iROI} = Mixed_cortex_lowres.Atlas(9).Scouts(iROI).Vertices;
-      ind_subcortex = cat(2, ind_subcortex, ind_roi_sub{iROI});
-      [~, ind_roi_subcortex{iROI}, ~] = intersect(ind_subcortex, ind_roi_sub{iROI});
 end
 
 
@@ -100,7 +103,6 @@ nROI = nROI_subcortex + nROI_cortex ;
 
 nvox = length(ind);
 leadfield = leadfield(:, ind, :);
-
 %%
 % get cross-spectrum
 disp('computing cross-spectrum')
@@ -202,11 +204,7 @@ toc
 end
 onlyC=source_roi_power_norm(1:68);
 
-figs_dir =  [power_figs_dir subj '/'];
-if ~isfolder(figs_dir)
-    mkdir(figs_dir)
-end
-figure('visible','off');
+figure('visible','on');
 allplots_cortex_BS(Mixed_cortex_lowres, onlyC, [0 max(onlyC)], ...
-     settings.cma, 'power', settings.smoothcortex, figs_dir)
+     settings.cma, 'power', settings.smoothcortex)
 close all
