@@ -31,7 +31,7 @@ report_dir = [AD_dir '/Results/Preprocessing/' sbj '/']; mkdir(report_dir)
 
 nchans = length(raw_data.label);
 
-names = 'Axial_GradioMeters';
+names = 'Grad';
 
 channel_names=raw_data.label;
 
