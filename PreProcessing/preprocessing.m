@@ -89,6 +89,6 @@ data_seg = ft_selectdata(cfg,data_seg);
 %% save
 
 disp(['This data is saved in ' [preprocessed_dir sbj] ' under the name ' sbj]);
-ft_write_data([preprocessed_dir sbj], data_seg, 'dataformat', 'matlab');
+ft_write_data([preprocessed_dir sbj '_200hz'], data_seg, 'dataformat', 'matlab');
 
 end

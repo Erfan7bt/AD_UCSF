@@ -1,4 +1,4 @@
-    
+
 for i =1:4
 settings.target_fs = 200; %sampling frequency
 settings.lcmv_reg = 0.05;
@@ -9,7 +9,7 @@ settings.winlength = 2*settings.target_fs;
 % model order for the spectral/connectivity analysis
 settings.morder = 20;
 load cm17
-settings.cma = cm17a;
+% settings.cma = cm17a;
 % how many PCA components to keep for each ROI
 settings.nPCA = 1; 
 
@@ -22,7 +22,7 @@ AD_dir='/home/erfan/Thesis/ADanonShare/';
 end
 %% loop over subjects
 preprocessed_data_dir= [AD_dir 'Data/Preprocessed/'];
-subjects= dir([preprocessed_data_dir '/*.mat']);
+subjects= dir([preprocessed_data_dir '/*200hz.mat']);
 bs_results_dir=[AD_dir 'Results/headmodeling/'];
 source_recon_dir=[AD_dir 'Results/source/'];
 power_figs_dir =[AD_dir 'Results/Figures/'];
@@ -34,14 +34,15 @@ end
 % load MEG data
 tic
 subj = subjects(i).name;
-subj = strrep(subj, '.mat', '');
+subj = strrep(subj, '_200hz.mat', '');
 
 disp(['processing subject ' subj])
-load([ preprocessed_data_dir subj '.mat']);
+load([ preprocessed_data_dir subj '_200hz.mat']);
 nchan = size(dat.label,1);
+% disp(nchan)
 ntri = size(dat.trial,2); 
 nsam = size(dat.trial{1,1},2);
-
+disp(['nchan ' num2str(nchan) ' ntri ' num2str(ntri) ' nsam ' num2str(nsam)])
 % load Brainstorm files
 
 try
@@ -68,13 +69,14 @@ nbootstrap = 0;
 
 % ROI labels
 labels_cortex= {Mixed_cortex_lowres.Atlas(5).Scouts.Label};
+regions_cortex={Mixed_cortex_lowres.Atlas(5).Scouts.Region};
 Labels_subcortex= {Mixed_cortex_lowres.Atlas(9).Scouts.Label};
-
 
 leftcortex=GridAtlas.Scouts(10);
 rightcortex=GridAtlas.Scouts(11);
 nROI_cortex=68;
 nROI_subcortex=15;
+
 dk=Mixed_cortex_lowres.Atlas(5).Scouts;
 
 ind_roi={};
@@ -119,53 +121,13 @@ end
 
 
 ind_roi_all=cat(2,ind_roi_subcortex,ind_roi_cortex);
-% %remove the cortex 
-% removeIdx = strcmp(Labels_subcortex, 'Cortex R') | strcmp(Labels_subcortex, 'Cortex L');
-% Mixed_cortex_lowres.Atlas(9).Scouts(removeIdx) = [];
-% 
-% Labels_subcortex= {Mixed_cortex_lowres.Atlas(9).Scouts.Label};
-% % number of ROIs in the Desikan-Kiliany Atlas and subcortical 
-% nROI_cortex = length(Mixed_cortex_lowres.Atlas(5).Scouts);
-% nROI_subcortex = length(Mixed_cortex_lowres.Atlas(9).Scouts);
-% nROI = nROI_subcortex+nROI_cortex;
-% 
-% ind_subcortex = [];
-% ind_roi_sub= {};
-% 
-% for iROI = 1:nROI_subcortex
-%       ind_roi_sub{iROI} = Mixed_cortex_lowres.Atlas(9).Scouts(iROI).Vertices;
-%       ind_subcortex = cat(2, ind_subcortex, ind_roi_sub{iROI});
-%       % [~, ind_roi_subcortex{iROI}, ~] = intersect(ind_subcortex, ind_roi_sub{iROI});
-% end
-% 
-% ind_cortex = [];
-% ind_roi = {};
-% for iROI = 1:nROI_cortex
-%   ind_roi{iROI} = Mixed_cortex_lowres.Atlas(5).Scouts(iROI).Vertices;
-%   ind_cortex = cat(2, ind_cortex, ind_roi{iROI});
-%   % [~, ind_roi_cortex{iROI}, ~] = intersect(ind_cortex, ind_roi{iROI});
-% end
-% 
-% ind=cat(2,ind_subcortex,ind_cortex);
-% 
-% %indices should be extracted from concatination of vertices indices 
-% for iROI = 1:nROI_subcortex
-%       [~, ind_roi_subcortex{iROI}, ~] = intersect(ind, ind_roi_sub{iROI});
-% end
-% 
-% for iROI = 1:nROI_cortex
-%  
-%   [~, ind_roi_cortex{iROI}, ~] = intersect(ind, ind_roi{iROI});
-% end
-% 
-% 
-% ind_roi_all=cat(2,ind_roi_subcortex,ind_roi_cortex);
+
+labels=[GridAtlas.Scouts.Label,labels_cortex];
 
 nROI = nROI_subcortex + nROI_cortex ;
 
 nvox = length(ind);
 leadfield = leadfield(:, ind, :);
-
 %%
 % get cross-spectrum
 disp('computing cross-spectrum')
@@ -263,20 +225,10 @@ end
 
 % save results 
 disp('saving results')
-save([result_folder_sub 'source_rec_results.mat'], 'source_roi_power', 'source_roi_power_norm', ...
+save([result_folder_sub 'source_rec_results_200hz.mat'],'regions_cortex','labels', 'source_roi_power', 'source_roi_power_norm', ...
     'source_roi_power_total','source_roi_power_total_norm','source_power_all', 'conn', 'settings','source_roi_data','inds','varex', ...
      'ind', 'nchan', 'nPCAs', 'beg_inds', 'end_inds', 'PCA_inds','nbootstrap');
 
 % clear all
 toc
 end
-onlyC=source_roi_power_norm(1:68);
-
-figs_dir =  [power_figs_dir subj '/'];
-if ~isfolder(figs_dir)
-    mkdir(figs_dir)
-end
-figure('visible','off');
-allplots_cortex_BS(Mixed_cortex_lowres, onlyC, [0 max(onlyC)], ...
-     settings.cma, 'power', settings.smoothcortex, figs_dir)
-close all

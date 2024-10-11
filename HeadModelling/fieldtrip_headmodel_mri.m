@@ -1,5 +1,32 @@
-addpath ../fieldtrip-20240704/
+
+[ret, name] = system('hostname');
+
+if startsWith(name,'ra')
+
+    addpath '/data/erfan/brainstorm3'
+
+    fs_folder = '/data/erfan/freesurfer/subjects/';
+    
+    BrainstormDbDir = '/data/erfan/brainstorm_db/';
+    
+    AD_dir = '/home/erfan/AD_UCSF/';
+else 
+
+    fs_folder = '/home/erfan/Thesis/freesurfer/subjects/';
+    
+    BrainstormDbDir = '/home/erfan/Thesis/brainstorm_db/';
+    
+    AD_dir = '/home/erfan/Thesis/ADanonShare/';
+end 
+
+fig_folder = [AD_dir '/Results/Figures/'];
+
+addpath /home/erfan/Thesis/fieldtrip-20240704/
+
+Data_dir=[AD_dir '/Data/Original/'];
+
 ft_defaults
+datafiles=dir([Data_dir '*mri_anon.mat'])
 %% BEM head model from original mri and segmentation from scratch 
 % mri=ft_read_mri('RSID0063_mri_anon.nii');
 % 
@@ -20,8 +47,11 @@ ft_defaults
 % ft_sourceplot(cfg, mri_resliced)
 % ft_determine_coordsys(mri_resliced)
 %%
-% provided segmentation 
-segmentedmri = load ('RSID0063_mri_anon.mat');
+% provided segmentation
+% loop over all the files in the directory that end with mri_anon.mat
+for i=1:length(datafiles)
+    sbj=datafiles(i).name
+segmentedmri = load ([Data_dir sbj]);
 ft_checkdata(segmentedmri, 'feedback', 'yes') % display some information about the segmentation
 
 % 
@@ -65,7 +95,7 @@ close all
 figure(1)
 tmp = binary_scalp + binary_skull + binary_brain;
 imagesc(squeeze(tmp(:,:,128)));
-print -dpng natmeg_dip_segorg.png
+% print -dpng natmeg_dip_segorg.png
 
 % use IMDILATE to inflate the segmentation
 binary_scalp = imdilate(binary_scalp, strel_bol(1));
@@ -74,7 +104,7 @@ figure(2)
 tmp = binary_scalp + binary_skull + binary_brain;
 imagesc(squeeze(tmp(:,:,128)));
 
-print -dpng natmeg_dip_segdil1.png
+% print -dpng natmeg_dip_segdil1.png
 
 % use IMDILATE to inflate the segmentation a bit more
 binary_scalp = imdilate(binary_scalp, strel_bol(1));
@@ -82,7 +112,7 @@ binary_scalp = imdilate(binary_scalp, strel_bol(1));
 figure(3)
 tmp = binary_scalp + binary_skull + binary_brain;
 imagesc(squeeze(tmp(:,:,128)));
-print -dpng natmeg_dip_segdil2.png
+% print -dpng natmeg_dip_segdil2.png
 
 % revert to the oriiginal binary_scalp
 binary_scalp = segmentedmri.scalp + binary_skull;
@@ -94,7 +124,8 @@ binary_brain = binary_brain & imerode(binary_skull, strel_bol(2)); % fully conta
 figure(4)
 tmp = binary_scalp + binary_skull + binary_brain;
 imagesc(squeeze(tmp(:,:,128)));
-print -dpng natmeg_dip_segbool.png
+% print -dpng natmeg_dip_segbool.png
+close all
 %%
 mri_segmented2 = segmentedmri;
 % insert the updated binary volumes, taking out the center part for skull and scalp
@@ -133,37 +164,31 @@ mesh = ft_prepare_mesh(cfg, mri_segmented2);
 % cfg.numvertices = 1000;
 % mesh_scalp = ft_prepare_mesh(cfg, mri_segmented2);
 %%
-figure
-ft_plot_mesh(mesh(1), 'facecolor', 'none'); % brain
-view([0 -1 0]); % from the right side
-
-figure
-ft_plot_mesh(mesh(2), 'facecolor', 'none'); % skull
-view([0 -1 0]); % from the right side
-
-figure
-ft_plot_mesh(mesh(3), 'facecolor', 'none'); % scalp
-view([0 -1 0]); % from the right side
+% figure
+% ft_plot_mesh(mesh(1), 'facecolor', 'none'); % brain
+% view([0 -1 0]); % from the right side
+% 
+% figure
+% ft_plot_mesh(mesh(2), 'facecolor', 'none'); % skull
+% view([0 -1 0]); % from the right side
+% 
+% figure
+% ft_plot_mesh(mesh(3), 'facecolor', 'none'); % scalp
+% view([0 -1 0]); % from the right side
 
 %%
-figure
-ft_plot_mesh(mesh(1), 'facecolor','r', 'facealpha', 0.4, 'edgecolor', 'none', 'edgealpha', 1);
-hold on
-ft_plot_mesh(mesh(2), 'facecolor','g', 'facealpha', 0.4, 'edgecolor', 'none', 'edgealpha', 1);
-hold on
-ft_plot_mesh(mesh(3), 'facecolor','b', 'facealpha', 0.4, 'edgecolor', 'none', 'edgealpha', 1);
+% figure
+% ft_plot_mesh(mesh(1), 'facecolor','r', 'facealpha', 0.4, 'edgecolor', 'none', 'edgealpha', 1);
+% hold on
+% ft_plot_mesh(mesh(2), 'facecolor','g', 'facealpha', 0.4, 'edgecolor', 'none', 'edgealpha', 1);
+% hold on
+% ft_plot_mesh(mesh(3), 'facecolor','b', 'facealpha', 0.4, 'edgecolor', 'none', 'edgealpha', 1);
 %%
-% Create a volume conduction model
-cfg        = [];
-cfg.grad= grad;
-cfg.method = 'localspheres'; % You can also specify 'openmeeg', 'bemcp', or another method
-cfg.tissue = {'brain'};
-headmodel  = ft_prepare_headmodel(cfg, mesh(1));
-%%
-meg=load('RSID0063_meg_rest_60sec.mat');
+sbj=strrep(sbj,'_mri_anon.mat','');
+meg=load([Data_dir sbj '_meg_rest_60sec.mat']);
 grad=meg.grad;
 %%
-figure
+sensor=figure('visible','off');
 ft_plot_sens(grad,'axis',true, 'unit', 'cm')
 hold on 
 % ft_plot_headmodel(headmodel)
@@ -175,15 +200,18 @@ ft_plot_mesh(mesh(3), 'facecolor','b', 'facealpha', 0.4, 'edgecolor', 'none', 'e
 % ft_plot_headmodel(headmodel, 'facealpha', 0.5, 'edgecolor', 'none'); % "lighting phong" does not work with opacity
 material dull
 camlight
-%%
-cfg=[];
-cfg.headmodel=headmodel;
-cfg.grad=grad;
-sourcemodel=ft_prepare_sourcemodel(cfg);
-%%
-cfg=[];
-cfg.sourcemodel=sourcemodel;
-cfg.headmodel= headmodel;
-% cfg.normalize = 'yes';
-cfg.grad=grad;
-lfm=ft_prepare_leadfield(cfg,meg);
+saveas(sensor, [fig_folder sbj '/ft_sensors_on_orig_head_1.png']);
+az = 0; el = 0; view(az, el)
+saveas(sensor, [fig_folder sbj '/ft_sensors_on_orig_head_2.png']);
+
+az = -90; el = 0; view(az, el)
+saveas(sensor, [fig_folder sbj '/ft_sensors_on_orig_head_3.png']);
+
+az = -180; el = 0; view(az, el)
+saveas(sensor, [fig_folder sbj '/ft_sensors_on_orig_head_4.png']);
+
+az = -270; el = 0; view(az, el)
+saveas(sensor, [fig_folder sbj '/sensors_ft_on_orig_head_5.png']);
+
+close all
+end
